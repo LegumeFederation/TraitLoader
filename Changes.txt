@@ -1,0 +1,41 @@
+Coding practices:
+  converted tabs to spaces (to preserve formatting accross editors)
+  
+Overall name changes: (for clarity, to be more general, and/or to avoid ambiguity)
+  "breeder" preffix --> "load"
+  "module"          --> "loader" or "sheet"
+  
+Renamed files and directories, added new:
+  trait_loader.pl (uploading_data.pl)
+  includes/
+    trait_helpers.pm (breeder_helper.pm)
+    PG_Database
+  loaders/ (modules)
+    load_<sheet name>.pm (breeder_<sheet name>.pm)
+  verifiers/ (NEW)
+    verify <sheet name>.pm (NEW)
+
+Added configuration file, trait_loader.conf.
+
+get_data_info()
+  removed LABEL because not requesting user to select a source
+  removed S_TYPE because there shouldn't be special-case code in core
+  removed TARGET_DB because it's defined in configuration file
+  added S_DB_NAME
+
+update_data_info()
+  changed name to get_cvs()
+  does not create cv records
+
+set_module_info()
+  changed name to set_loader_info
+
+pre_processing()
+  changed name to preprocess()
+
+post_processing
+  changed name to postprocess()
+    
+Open questions:
+  would there be need for multiple trait cvs?
+  
