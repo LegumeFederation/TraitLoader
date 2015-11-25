@@ -2,7 +2,7 @@
 # PG_Database.pm
 # Perl module for accessing tables in Postgres Database
 #
-# Author: Taein Lee
+# Author: Taein Lee (Main Lab, Washington State University)
 #         Adapted for generalized trait loaders by Ethy Cannon
 #
 # ------------------------------------------------------------ #
