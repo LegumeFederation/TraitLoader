@@ -3,7 +3,7 @@
 ##############################################################################
 # Author      : Ethy Cannon 
 #               NOTE: developed from scripts written by Taein Lee 
-#                     in the Main Lab.
+#                     in the Main Lab, Washington State University.
 # Target      : Generic loader for QTL/Map/Marker data
 # Name        : trait_loader.pl
 # Purpose     : Master script for loading QTL/Map/Marker data from spreadsheets.
