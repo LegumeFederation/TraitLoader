@@ -36,9 +36,10 @@
 use strict;
 use Carp;
 use DBI;
-use Data::Dumper;
 use Spreadsheet::ParseExcel;
 use Encode;
+use File::Basename;
+use Data::Dumper;
 
 use lib qw(./includes);
 use PG_Database;
@@ -212,7 +213,8 @@ sub open_log_files {
   }
   
   # create a sub-folder for log files
-  my $log_folder_sub = $log_folder.'/'.get_log_time_stamp().'_'.$excel;
+  my $jobname = basename($excel);
+  my $log_folder_sub = $log_folder.'/'.get_log_time_stamp().'_'.$jobname;
   if (not (-e $log_folder_sub)) {
     mkdir($log_folder_sub, 0777) 
       or die "\n\tcannot mkdir $log_folder_sub:\n\t$!\n";
@@ -337,43 +339,42 @@ sub sec_to_time_str {
 sub set_loader_info {
   my ($data_info_ref, $config) = @_;
   my %loaders = ();
-  my $count = 1;
   
   if ($config->{'contact'}) {
-    $loaders{$count++}  = { 'MODULE' => 'contact',          'SHEET' => $config->{'contact'} };
+    $loaders{'contact'}          = {'MODULE' => 'contact',          'SHEET' => $config->{'contact'} };
   }
   if ($config->{'publication'}) {
-    $loaders{$count++}  = { 'MODULE' => 'publication',      'SHEET' => $config->{'publication'} };
+    $loaders{'publication'}      = {'MODULE' => 'publication',      'SHEET' => $config->{'publication'} };
   }
   if ($config->{'site-environment'}) {
-    $loaders{$count++}  = { 'MODULE' => 'site-environment', 'SHEET' => $config->{'site-environment'} };
+    $loaders{'site-environment'} = {'MODULE' => 'site-environment', 'SHEET' => $config->{'site-environment'} };
   }
   if ($config->{'dataset'}) {
-    $loaders{$count++}  = { 'MODULE' => 'dataset',          'SHEET' => $config->{'dataset'} };
+    $loaders{'dataset'}          = {'MODULE' => 'dataset',          'SHEET' => $config->{'dataset'} };
   }
   if ($config->{'stock'}) {
-    $loaders{$count++}  = { 'MODULE' => 'stock',            'SHEET' => $config->{'stock'} };
+    $loaders{'stock'}            = {'MODULE' => 'stock',            'SHEET' => $config->{'stock'} };
   }
   if ($config->{'mapset'}) {
-    $loaders{$count++}  = { 'MODULE' => 'mapset',           'SHEET' => $config->{'mapset'} };
+    $loaders{'mapset'}           = {'MODULE' => 'mapset',           'SHEET' => $config->{'mapset'} };
   }
   if ($config->{'linkagegroup'}) {
-    $loaders{$count++}  = { 'MODULE' => 'linkagegroup',     'SHEET' => $config->{'linkagegroup'} };
+    $loaders{'linkagegroup'}     = {'MODULE' => 'linkagegroup',     'SHEET' => $config->{'linkagegroup'} };
   }
   if ($config->{'marker'}) {
-    $loaders{$count++}  = { 'MODULE' => 'marker',           'SHEET' => $config->{'marker'} };
+    $loaders{'marker'}           = {'MODULE' => 'marker',           'SHEET' => $config->{'marker'} };
   }
   if ($config->{'qtl'}) {
-    $loaders{$count++}  = { 'MODULE' => 'qtl',              'SHEET' => $config->{'qtl'} };
+    $loaders{'qtl'}              = {'MODULE' => 'qtl',              'SHEET' => $config->{'qtl'} };
   }
   if ($config->{'qtltrait'}) {
-    $loaders{$count++}  = { 'MODULE' => 'qtltrait',         'SHEET' => $config->{'qtltrait'} };
+    $loaders{'qtltrait'}         = {'MODULE' => 'qtltrait',         'SHEET' => $config->{'qtltrait'} };
   }
   if ($config->{'mapposition'}) {
-    $loaders{$count++}  = { 'MODULE' => 'mapposition',      'SHEET' => $config->{'mapposition'} };
+    $loaders{'mapposition'}      = {'MODULE' => 'mapposition',      'SHEET' => $config->{'mapposition'} };
   }
   if ($config->{'image'}) {
-    $loaders{$count++}  = { 'MODULE' => 'image',            'SHEET' => $config->{'image'} };
+    $loaders{'image'}            = {'MODULE' => 'image',            'SHEET' => $config->{'image'} };
   }
 
   return \%loaders;
