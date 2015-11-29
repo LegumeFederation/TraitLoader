@@ -112,24 +112,24 @@ sub get_cvs {
   }
   
   # get db and cv record ids
-  $data_info_ref->{'DB_ID'}      = get_db_id($data_info_ref->{'DB_NAME'});
-  $data_info_ref->{'CV_ID'}      = get_cv_id($data_info_ref->{'CV_NAME'});
-  $data_info_ref->{'CV_ID_RO'}   = get_cv_id('relationship');
-  $data_info_ref->{'CV_ID_SO'}   = get_cv_id('sequence');
-  $data_info_ref->{'CV_ID_TO'}   = get_cv_id( $config->{'trait_ontology'});
-  $data_info_ref->{'CV_ID_TPUB'} = get_cv_id('tripal_pub');
+  $data_info_ref->{DB_ID}      = get_db_id($data_info_ref->{DB_NAME});
+  $data_info_ref->{CV_ID}      = get_cv_id($data_info_ref->{CV_NAME});
+  $data_info_ref->{CV_ID_RO}   = get_cv_id('relationship');
+  $data_info_ref->{CV_ID_SO}   = get_cv_id('sequence');
+  $data_info_ref->{CV_ID_TO}   = get_cv_id($config->{'trait_ontology'});
+  $data_info_ref->{CV_ID_TPUB} = get_cv_id('tripal_pub');
   
   if ($config->{'trait_descriptor_ontology'}) {
-    $data_info_ref->{'CV_ID_TD'} = get_cv_id($config->{'trait_descriptor_ontology'});
+    $data_info_ref->{CV_ID_TD} = get_cv_id($config->{'trait_descriptor_ontology'});
   }
   
   print "\n\n\t===============================\n\tCVs in cv table\n";
   print "\t-------------------------------\n";
-  print "\t> MAIN                  : ".$data_info_ref->{'DB_ID'}."\n";
-  print "\t> Relationship Ontology : ".$data_info_ref->{'CV_ID_RO'}."\n";
-  print "\t> Sequence Ontology     : ".$data_info_ref->{'CV_ID_SO'}."\n";
-  print "\t> Trait Descriptor      : ".$data_info_ref->{'CV_ID_TD'}."\n";
-  print "\t> Trait Ontology        : ".$data_info_ref->{'CV_ID_TO'}."\n";
+  print "\t> MAIN                  : ".$data_info_ref->{DB_ID}."\n";
+  print "\t> Relationship Ontology : ".$data_info_ref->{CV_ID_RO}."\n";
+  print "\t> Sequence Ontology     : ".$data_info_ref->{CV_ID_SO}."\n";
+  print "\t> Trait Descriptor      : ".$data_info_ref->{CV_ID_TD}."\n";
+  print "\t> Trait Ontology        : ".$data_info_ref->{CV_ID_TO}."\n";
   print "\t-------------------------------\n\n";
   
   # check data_info
@@ -156,10 +156,10 @@ sub get_data_info {
   
   # set database info
   my %data_info = ();
-  $data_info{'DB_NAME'}   = $config->{'DB_NAME'};
-  $data_info{'CV_NAME'}   = $config->{'CV_NAME'};
-  $data_info{'S_CV_NAME'} = $config->{'S_CV_NAME'};
-  $data_info{'S_DB_NAME'} = $config->{'S_DB_NAME'};
+  $data_info{DB_NAME}   = $config->{DB_NAME};
+  $data_info{CV_NAME}   = $config->{CV_NAME};
+  $data_info{S_CV_NAME} = $config->{S_CV_NAME};
+  $data_info{S_DB_NAME} = $config->{S_DB_NAME};
   
   return \%data_info;
 }#get_data_info
@@ -180,7 +180,9 @@ sub get_log_time_stamp {
 sub log_time {
   my ($msg) = @_;
   my ($sec, $min, $hour, $mday, $mon, $year) = localtime(time);
-  my $time_str = $pg_db->trim($msg).sprintf("%d-%02d-%02d_%02dh-%02dm-%02ds", $year+1900, $mon+1, $mday, $hour, $min, $sec)."\n";
+  my $time_str = $pg_db->trim($msg)
+               . sprintf("%d-%02d-%02d_%02dh-%02dm-%02ds", 
+                         $year+1900, $mon+1, $mday, $hour, $min, $sec)."\n";
   println($time_str, 'L');
 }#log_time
 
@@ -246,7 +248,7 @@ sub postprocess {
 #      exhaustive, just the major table corresponding to each worksheet
 
   # commit transaction
-  print "\tCommit changes to database? (y or n) >";
+  print "\nCommit changes to database? (y/n) ";
   my $opt= <STDIN>;
   chomp($opt);
   if ($opt eq 'y') {
