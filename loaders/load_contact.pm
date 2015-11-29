@@ -1,7 +1,7 @@
 ###############################################################################
 # Author      : Ethy Cannon 
-#               NOTE: developed from scripts written by Taein Lee 
-#                     in the Main Lab, Washington State University.
+#               NOTE: developed from scripts written by Taein Lee, 
+#                     Main Lab, Washington State University.
 # Name        : load_contact.pm
 # Date        : November, 2015
 # Description : loader for 'contact' worksheet
@@ -9,15 +9,15 @@
 
 use strict;
 
-our $contact_identifer_ref;
+our $name_code_ref;
+
 
 #-----------------------------------------------------------------------------#
 # process_contact
 #-----------------------------------------------------------------------------#
 sub process_contact {
   my ($pg_db, $oBook, $module_ref, $data_info_ref)= @_;
-  my %record_new_table= ();
-  my %cvterm_id= ();
+  my %record_new_table = ();
 
 #TODO: may not want this; seems to only be used to count records inserted
   # pre-processing
@@ -30,114 +30,121 @@ sub process_contact {
     println("\n$error\n\t[$module_ref->{SHEET}] Abort: process excel sheet...\n\n",'SE');
     exit;
   }
-exit;
-=cut  
   
-  # get cvterm_id
-  $cvterm_id{person}      = check_cvterm('person',       $data_info_ref->{CV_ID});
-  $cvterm_id{institution}    = check_cvterm('institution',  $data_info_ref->{CV_ID});
-  $cvterm_id{lab}        = check_cvterm('lab',          $data_info_ref->{CV_ID});
-  $cvterm_id{organization}  = check_cvterm('organization', $data_info_ref->{CV_ID});
-  $cvterm_id{database}    = check_cvterm('database',     $data_info_ref->{CV_ID});
-  $cvterm_id{company}      = check_cvterm('company',      $data_info_ref->{CV_ID});
-  $cvterm_id{first_name}    = check_cvterm('first_name',   $data_info_ref->{CV_ID});
-  $cvterm_id{last_name}    = check_cvterm('last_name',    $data_info_ref->{CV_ID});
-  $cvterm_id{email}      = check_cvterm('email',        $data_info_ref->{CV_ID});
-  $cvterm_id{address}      = check_cvterm('address',      $data_info_ref->{CV_ID});
-  $cvterm_id{phone}      = check_cvterm('phone',        $data_info_ref->{CV_ID});
-  $cvterm_id{title}      = check_cvterm('title',        $data_info_ref->{CV_ID});
-  $cvterm_id{name_code}    = check_cvterm('name_code',    $data_info_ref->{CV_ID});
-  $cvterm_id{keywords}    = check_cvterm('keywords',     $data_info_ref->{CV_ID});
-  $cvterm_id{alias}      = check_cvterm('alias',        $data_info_ref->{CV_ID});
-  $cvterm_id{fax}        = check_cvterm('fax',          $data_info_ref->{CV_ID});
-  $cvterm_id{country}      = check_cvterm('country',      $data_info_ref->{CV_ID});
-  $cvterm_id{source}      = check_cvterm('source',       $data_info_ref->{CV_ID});
-  $cvterm_id{last_update}    = check_cvterm('last_update',  $data_info_ref->{CV_ID});
-  $cvterm_id{comments}    = check_cvterm('comments',     $data_info_ref->{CV_ID});
-  $cvterm_id{url}        = check_cvterm('url',          $data_info_ref->{CV_ID});
-  $error=  check_cvterm_id(\%cvterm_id);
-  if ($error) {
-    println("\n\t[$module_ref->{SHEET}] Abort: cvterm_id missing : $error\n\n",'SE');
-    return;
-  }
+  # get cvterm_ids
+  my $cvterm_ref = getCVtermIDs('contact', $module_ref, $data_info_ref);
   
-  # insert data
+  # insert/update data
   foreach my $ctr (sort { $a <=> $b } keys %{$excel_ref}) {
     println(sprintf("\n$module_ref->{SHEET} [ROW : %d]\n",$ctr+2),'WE');
-    
-    # Check data
-    if ($excel_ref->{$ctr}{type} eq 'person') {
-      if (!($excel_ref->{$ctr}{first_name} && $excel_ref->{$ctr}{last_name})) {
-        println("\n\t[$module_ref->{SHEET}] Abort: first_name and last_name must be not empty ($excel_ref->{$ctr}{name})",'SE');
-        exit;
-      }
-    }
     
     # ------------------------------------------- #
     # insert into contact tables
     # ------------------------------------------- #
-    # contact_name
-    my ($contact_id, $flag_dup) = insert_into_contact($cvterm_id{$excel_ref->{$ctr}{type}}, $excel_ref->{$ctr}{name}, $excel_ref->{$ctr}{reasearch_interest});
+    # contact_type, name, research_interests
+    my $contact_type_id = get_cvterm_id($excel_ref->{$ctr}{contact_type}, 
+                                        $data_info_ref->{CV_ID});
+#print "Contact type id for '$excel_ref->{$ctr}{contact_type}' is $contact_type_id\n";
+    my ($contact_id, $update) 
+      = insert_into_contact($contact_type_id, 
+                            $excel_ref->{$ctr}{name}, 
+                            $excel_ref->{$ctr}{research_interests});
+print "Returned from insert: contact_id: $contact_id, update record: $update\n";
+    continue if ($contact_id == 0); # something went wrong with this record.
     
     # ------------------------------------------- #
     # insert into contactprop tables
     # ------------------------------------------- #
-    # institution
-    insert_into_contactprop($contact_id, $cvterm_id{institution}, $excel_ref->{$ctr}{institution}) if ($excel_ref->{$ctr}{institution});
-    # lab
-    insert_into_contactprop($contact_id, $cvterm_id{lab}, $excel_ref->{$ctr}{lab}) if ($excel_ref->{$ctr}{lab});
     # first_name
-    insert_into_contactprop($contact_id, $cvterm_id{first_name}, $excel_ref->{$ctr}{first_name}) if ($excel_ref->{$ctr}{first_name});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{first_name}, 
+                            $excel_ref->{$ctr}{first_name}, 
+                            $update) if ($excel_ref->{$ctr}{first_name});
     # last_name
-    insert_into_contactprop($contact_id, $cvterm_id{last_name}, $excel_ref->{$ctr}{last_name}) if ($excel_ref->{$ctr}{last_name});
-    # address
-    insert_into_contactprop($contact_id, $cvterm_id{address}, $excel_ref->{$ctr}{address}) if ($excel_ref->{$ctr}{address});
-    # email
-    insert_into_contactprop($contact_id, $cvterm_id{email}, $excel_ref->{$ctr}{email}) if ($excel_ref->{$ctr}{email});
-    # phone
-    insert_into_contactprop($contact_id, $cvterm_id{phone}, $excel_ref->{$ctr}{phone}) if ($excel_ref->{$ctr}{phone});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{last_name}, 
+                            $excel_ref->{$ctr}{last_name}, 
+                            $update) if ($excel_ref->{$ctr}{last_name});
     # title
-    insert_into_contactprop($contact_id, $cvterm_id{title}, $excel_ref->{$ctr}{title}) if ($excel_ref->{$ctr}{title});
-    # fax
-    insert_into_contactprop($contact_id, $cvterm_id{fax}, $excel_ref->{$ctr}{fax}) if ($excel_ref->{$ctr}{fax});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{title}, 
+                            $excel_ref->{$ctr}{title}, 
+                            $update) if ($excel_ref->{$ctr}{title});
+    # affiliation
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{affiliation}, 
+                            $excel_ref->{$ctr}{affiliation}, 
+                            $update) if ($excel_ref->{$ctr}{affiliation});
+    # lab
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{lab}, 
+                            $excel_ref->{$ctr}{lab}, 
+                            $update) if ($excel_ref->{$ctr}{lab});
+    # address
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{address}, 
+                            $excel_ref->{$ctr}{address}, 
+                            $update) if ($excel_ref->{$ctr}{address});
     # country
-    insert_into_contactprop($contact_id, $cvterm_id{country}, $excel_ref->{$ctr}{country}) if ($excel_ref->{$ctr}{country});
-    # source
-    insert_into_contactprop($contact_id, $cvterm_id{source}, $excel_ref->{$ctr}{source}) if ($excel_ref->{$ctr}{source});
-    # last_update
-    insert_into_contactprop($contact_id, $cvterm_id{last_update}, $excel_ref->{$ctr}{last_update}) if ($excel_ref->{$ctr}{last_update});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{country}, 
+                            $excel_ref->{$ctr}{country}, 
+                            $update) if ($excel_ref->{$ctr}{country});
+    # email
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{email}, 
+                            $excel_ref->{$ctr}{email}, 
+                            $update) if ($excel_ref->{$ctr}{email});
+    # phone
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{phone}, 
+                            $excel_ref->{$ctr}{phone}, 
+                            $update) if ($excel_ref->{$ctr}{phone});
+    # fax
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{fax}, 
+                            $excel_ref->{$ctr}{fax}, 
+                            $update) if ($excel_ref->{$ctr}{fax});
     # url
-    insert_into_contactprop($contact_id, $cvterm_id{url}, $excel_ref->{$ctr}{url}) if ($excel_ref->{$ctr}{url});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{url}, 
+                            $excel_ref->{$ctr}{url}, 
+                            $update) if ($excel_ref->{$ctr}{url});
+    # research_interests
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{research_interests}, 
+                            $excel_ref->{$ctr}{research_interests}, 
+                            $update) if ($excel_ref->{$ctr}{research_interests});
+    # last_update
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{last_update}, 
+                            $excel_ref->{$ctr}{last_update}, 
+                            $update) if ($excel_ref->{$ctr}{last_update});
     # comments
-    insert_into_contactprop($contact_id, $cvterm_id{comments}, $excel_ref->{$ctr}{comments}) if ($excel_ref->{$ctr}{comments});
-    insert_into_contactprop($contact_id, $cvterm_id{comments}, $excel_ref->{$ctr}{comment}) if ($excel_ref->{$ctr}{comment});
-    
-    # name_code
-    if ($excel_ref->{$ctr}{name_code}) {
-      my $name_code = $data_info_ref->{S_CV_NAME}.'_'.$excel_ref->{$ctr}{name_code};
-      insert_into_contactprop($contact_id, $cvterm_id{name_code}, $name_code);
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{comments}, 
+                            $excel_ref->{$ctr}{comments}, 
+                            $update) if ($excel_ref->{$ctr}{comments});
+    insert_into_contactprop($contact_id, 
+                            $cvterm_ref->{curator_comments}, 
+                            $excel_ref->{$ctr}{curator_comments},
+                            $update) if ($excel_ref->{$ctr}{curator_comments});
       
-      # save name code in hash
-      $name_code_ref->{$name_code} = $contact_id;
-    }
+    # save name code in hash
+    $name_code_ref->{$excel_ref->{$ctr}{name_code}} = $contact_id;
     
     # alias
     my @aliases= split(/[,;]/, $excel_ref->{$ctr}{alias});
     my $rank= 0;
     foreach my $alias (@aliases) {
-      insert_into_contactprop($contact_id, $cvterm_id{alias}, $pg_db->trim_quote($alias), $rank++);
+      insert_into_contactprop($contact_id, 
+                              $cvterm_ref->{alias}, 
+                              $pg_db->trim_quote($alias), 
+                              $update,
+                              $rank++);
     }
-    
-    # keywords
-    my @keywords= split(/[;,]/, $excel_ref->{$ctr}{keywords});
-    $rank= 0;
-    foreach my $keyword (@keywords) {
-      insert_into_contactprop($contact_id, $cvterm_id{keywords}, $pg_db->trim_quote($keyword), $rank++);
-      last if ($rank > 4);
-    }
-  }
-  module_post_process($module_ref->{MODULE}, $num_record_ref);
-=cut
+  }#each contact record
 }#process_contact
+
 1;
 __END__
