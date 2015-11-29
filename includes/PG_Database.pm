@@ -1,44 +1,64 @@
-# ------------------------------------------------------------ #
+# ---------------------------------------------------------------------------- #
 # PG_Database.pm
 # Perl module for accessing tables in Postgres Database
 #
 # Author: Taein Lee (Main Lab, Washington State University)
 #         Adapted for generalized trait loaders by Ethy Cannon
 #
-# ------------------------------------------------------------ #
+# ---------------------------------------------------------------------------- #
 #
 # CLASS METHODS
 #
 # [Dababase Conncetivities]
-#  connect_db()               : connect to database
-#  disconnect_db()            : disconnect from database
+#  connect_db()                : connect to database
+#  disconnect_db()             : disconnect from database
 #
 # [Database Information]
-#  get_db_name()              : return the name of database
+#  get_db_name()               : return the name of database
 #
 # [SQL Statements]
-#  execute_query_stmt(stmt)   : execute SQL statement
-#  query_stmt(stmt)           : execute SQL statement and return statement handler
-#  query_field(stmt)          : return the first value of the column of the returned record
-#  query_fields(stmt)         : return the first row of the returned record
-#  get_data_ref(stmt)         : return reference of 2D array
-#  get_ranged_data_ref(stmt, order_by, base, offset)    : return total number of rows, number of rows, number of columns and reference of 2D array
-#  insert_new_record($table_name, $data_ref, <$column>) : insert a record to database
-#  update_record($table_name, $data_ref, $pr_field, $pr_value)  : update the record in database
-#  get_num_records(data_ref)  : return number of records in data_ref
+#  execute_query_stmt(stmt)    : execute SQL statement
+#  query_stmt(stmt)            : execute SQL statement and return statement 
+#                               handler
+#  query_field(stmt)           : return the first value of the column of the 
+#                               returned record
+#  query_fields(stmt)          : return the first row of the returned record
+#  get_data_ref(stmt)          : return reference of 2D array
+#  get_ranged_data_ref(stmt, order_by, base, offset)    
+#                              : return total number of rows, number of rows, 
+#                               number of columns and reference of 2D array
+#  insert_new_record($table_name, $data_ref, <$column>) 
+#                              : insert a record to database
+#  update_record($table_name, $data_ref, $pr_field, $pr_value)  
+#                              : update the record in database
+#  get_num_records(data_ref)   : return number of records in data_ref
 #
 # [Data Extractions]
-#  execute_sql_to_excel($stmt, <$outfile>)   : execute SQL statement and store the result to an Excel sheet
-#  execute_sql_to_text($stmt, <$outfile>)    : execute SQL statement and store the result to a text file
-#  execute_sql_file_to_excel($infile, <$outfile> : execute SQL statements and store the results to an Excel sheet
-#  execute_sql_file_to_text($stmt, <$outfile>)   : execute SQL statement and store the result to text files
-#  extract_tables_to_excel($table_name_ref, <$outfile>) : extract and store the contents of a table to an Excel sheet
-#  extract_tables_to_text($table_name_ref, <$outfile>)  : extract and store the contents of a table to a text file
+#  execute_sql_to_excel($stmt, <$outfile>)   
+#                              : execute SQL statement and store the result to 
+#                               an Excel sheet
+#  execute_sql_to_text($stmt, <$outfile>)    
+#                              : execute SQL statement and store the result to 
+#                               a text file
+#  execute_sql_file_to_excel($infile, <$outfile> 
+#                              : execute SQL statements and store the results to 
+#                               an Excel sheet
+#  execute_sql_file_to_text($stmt, <$outfile>)   
+#                              : execute SQL statement and store the result to 
+#                               text files
+#  extract_tables_to_excel($table_name_ref, <$outfile>) 
+#                              : extract and store the contents of a table to an 
+#                               Excel sheet
+#  extract_tables_to_text($table_name_ref, <$outfile>)  
+#                              : extract and store the contents of a table to a 
+#                               text file
 #
 # [Table Information]
 #  str_all_tables_names()      : return all names of tables
-#  does_table_exist(table_name, <table_type>)  : returns true if the table exists in database
-#  get_table_info(table_name)  : return the number of fields and hash{ field name => data type}
+#  does_table_exist(table_name, <table_type>)  
+#                              : returns true if the table exists in database
+#  get_table_info(table_name)  : return the number of fields and 
+#                                hash{field name => data type}
 #  str_table_info(table_name)  : return the information of the specified table
 #  get_column_names(table_name): return column names of a table
 #
@@ -53,7 +73,7 @@
 #  trim_slim_quote       : trim + slim + quote
 #  trim_capitalize_first : trim and capitalize the first letter of a word
 #  print_error_msg       : prints error messages onto the browser
-# ------------------------------------------------------- #
+# ---------------------------------------------------------------------------- #
 
 package PG_Database;
 use strict;
@@ -69,7 +89,7 @@ use Data::Dumper;
   my $loghandle;
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-  #               CLASS CONSTANCES                      #
+  #                CLASS CONSTANTS                      #
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#  
   #-----------------------------------------------------#
   # constructor
@@ -213,7 +233,7 @@ use Data::Dumper;
   # update_record                                             #
   #-----------------------------------------------------------#
   sub update_record {
-    my ($self, $table_name, $data_ref, $pr_field, $pr_value)= @_;
+    my ($self, $table_name, $data_ref, $pr_field, $pr_value) = @_;
     
     # create SQL statement for update
     my $stmt= "UPDATE $table_name SET ";
@@ -226,11 +246,12 @@ use Data::Dumper;
     # encode SQL statement in UTF-8
     $stmt = encode("utf8", $stmt);
     
+    # record statement
+    $self->write_log($stmt);
+
     # execute SQL statement
-    my $sth= $dbh->prepare($stmt) or die "Can't prepare the query $DBI::errstr\n";
-    $sth->execute() or die "Can't execute $DBI::errstr\n";
-    $sth->finish();
-    print "\tDBI: updated the record in $table_name\n";
+    $self->execute_query_stmt($stmt);
+    print "\tDBI: updated the record in $table_name where $pr_field = $pr_value\n";
   }
   
   
@@ -613,8 +634,22 @@ use Data::Dumper;
     $stmt.= " AND owner = '".uc($owner)."'" if ($owner);
     my $result= $self->query_field($stmt);
     return ($result eq "") ? 0 : 1;
-  }
+  }#does_table_exist
   
+  
+  #-----------------------------------------------------#
+  # get_all_rows
+  # return all rows found by a query
+  #-----------------------------------------------------#
+  sub get_all_rows {
+    my ($self, $key, $sql) = @_;
+    
+    my $sth = $self->query_stmt($sql);
+    
+    return $sth->fetchall_hashref($key);
+  }#get_all_rows
+  
+
   #-----------------------------------------------------#
   # get_table_info (single table)
   # return information of a table
@@ -624,20 +659,22 @@ use Data::Dumper;
   sub get_table_info {
     my ($self, $table_name)= @_;
     my %table_info= ();
-    my $num= 0;
+    my $num = 0;
     
     #check if the table exists
     if ($self->does_table_exist($table_name)) {
       # get the table information
-      my $sth= $self->query_stmt("SELECT * FROM $table_name");
-      $num= $sth->{NUM_OF_FIELDS};
-      for (my $i= 0; $i < $num; $i++) {
-        $table_info{$sth->{NAME}->[$i]}= $sth->{TYPE}->[$i];
+      my $sth = $self->query_stmt("SELECT * FROM $table_name");
+      $num = $sth->{NUM_OF_FIELDS};
+      for (my $i=0; $i<$num; $i++) {
+        $table_info{$sth->{NAME}->[$i]} = $sth->{TYPE}->[$i];
       }
       $sth->finish();
     }
+    
     return ($num, \%table_info);
-  }
+  }#get_table_info
+  
   
   #-----------------------------------------------------#
   # str_table_info (single table)
