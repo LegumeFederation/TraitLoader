@@ -1,0 +1,21 @@
+============================================
+TraitLoader: QTL/Map/Marker loader for Chado
+============================================
+
+Companion scripts to the Tripal_Trait module.
+
+Developed by:
+------------- 
+  Taein Lee (Main Lab, Washington State University)
+  Ethy Cannon (Computer Science Dept, Iowa State University)
+  Vijay Karingula (MIS, Iowa State University)
+
+Requirements:
+-------------
+  o The controlled vocabulary terms defined in the Tripal_Trait file
+    tripal_trait.obo must be loaded.
+    
+Parts of this Perl loader:
+--------------------------
+  trait_loader.conf  -- configuration file for scripts; customizations go here.
+  
