@@ -44,6 +44,7 @@ use Data::Dumper;
 use lib qw(./includes);
 use PG_Database;
 use trait_helpers;
+use HashDB;
 
 use lib qw(./loaders);
 use load_contact;
@@ -73,10 +74,10 @@ my $loghandle;
 my $data_info_ref;
 
 # Initialize stuff, open the excel spreadsheet
-my ($start_time, $loaders_ref, $oBook) = preprocess();
+my ($start_time, $loaders_ref, $oBook, $berkeley_dbh) = preprocess();
 
 # Call each loader by worksheet
-if (verify_contact($pg_db, $oBook, $loaders_ref->{'contact'}, $data_info_ref)) {
+if (verify_contact($pg_db, $oBook, $loaders_ref->{'contact'}, $data_info_ref, $berkeley_dbh)) {
   process_contact($pg_db, $oBook, $loaders_ref->{'contact'}, $data_info_ref);
 }
 if (verify_marker($pg_db, $oBook, $loaders_ref->{'marker'}, $data_info_ref)) {
@@ -316,7 +317,10 @@ sub preprocess {
   my %pub_id = ();
   $pub_id_ref = \%pub_id;
   
-  return ($start_time, $loaders_ref, $oBook);
+  #create a berkeleyDB file
+  my $berkeley_dbh = HashDB::create_berkeleyDB($input_dir)
+  
+  return ($start_time, $loaders_ref, $oBook, $berkeley_dbh);
 }#preprocess
 
 
