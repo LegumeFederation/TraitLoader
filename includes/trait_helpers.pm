@@ -433,7 +433,8 @@ sub println {
 #    add a new cvterm if not exists in table
 #-----------------------------------------------------------------------------#
 sub process_excel {
-  my ($oBook, $sheet_name, $data_info_ref)= @_;
+  my ($oBook, $sheet_name, $data_info_ref, $berkeley_dbh)= @_;
+  
   
   my %record_excel  = ();
   my %cvterm_excel  = ();
@@ -472,6 +473,14 @@ sub process_excel {
       my $col   = $columns_ref->{$column}{COL};
       my $cell  = $sheet->{Cells}[$row][$col];
       my $value = (defined $cell) ? $pg_db->trim_quote($cell->Value) : '';
+      
+      chomp $col;
+      my $key;
+      # Preparing the data to be in the format of COLNAME:COLVALUE->COLVALUE
+      # Here "COLNAME:COLVALUE" is the key and "COLVALUE" is the value in hashtable
+      $key = $col.":".$value;
+      #putting the values in the mentioned format into BerkeleyDB file
+      $berkeley_dbh->db_put($key, $value);
       
       # store cvterm column
       if ($columns_ref->{$column}{TYPE} eq 'S_CVTERM') {
