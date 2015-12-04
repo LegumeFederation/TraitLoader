@@ -11,6 +11,7 @@
 ##############################################################################
 
 use strict;
+use BerkeleyDB;
 use Data::Dumper;
 
 #TODO: may not want this; seems to only be used to count records inserted
@@ -468,17 +469,18 @@ sub process_excel {
     ++$num_rows;
     
     # check data
+    my $row_no = 0;
     foreach my $column (keys %{$columns_ref}) {
       # get cell value
       my $col   = $columns_ref->{$column}{COL};
       my $cell  = $sheet->{Cells}[$row][$col];
       my $value = (defined $cell) ? $pg_db->trim_quote($cell->Value) : '';
-      
+      ++$row_no;
       chomp $col;
       my $key;
       # Preparing the data to be in the format of COLNAME:COLVALUE->COLVALUE
       # Here "COLNAME:COLVALUE" is the key and "COLVALUE" is the value in hashtable
-      $key = $col.":".$value;
+      $key = $col.":".$value.":".$row_no;
       #putting the values in the mentioned format into BerkeleyDB file
       $berkeley_dbh->db_put($key, $value);
       
