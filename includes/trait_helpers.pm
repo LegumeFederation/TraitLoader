@@ -478,9 +478,9 @@ sub process_excel {
       ++$row_no;
       chomp $col;
       my $key;
-      # Preparing the data to be in the format of COLNAME:COLVALUE->COLVALUE
-      # Here "COLNAME:COLVALUE" is the key and "COLVALUE" is the value in hashtable
-      $key = $col.":".$value.":".$row_no;
+      # Preparing the data to be in the format of SHEETNAME:COLNAME:ROWNo->COLVALUE
+      # Here "SHEETNAME:COLNAME:ROWNo" is the key and "COLVALUE" is the value
+      $key = $sheet_name.":".$col.":".$row_no;
       #putting the values in the mentioned format into BerkeleyDB file
       $berkeley_dbh->db_put($key, $value);
       
